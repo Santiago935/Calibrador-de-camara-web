@@ -6,6 +6,17 @@
     </head>
     <body>
 
+      <p id="status">OpenCV.js is loading...</p>
+
+      <script>
+        var Module = {
+      // https://emscripten.org/docs/api_reference/module.html#Module.onRuntimeInitialized
+      onRuntimeInitialized() {
+        document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
+      }
+    }; 
+        </script>   
+
         <dev class = textoInicial>
             <h1>
                 Introduccion
@@ -17,64 +28,61 @@
 
             <h2>Insertar imagenes</h2>
         </dev>
+        <!-- Hago la carga de la imagen-->
         <dev class = imagen1>
             <div class="inputoutput">
                 <img id="imageSrc" alt="No Image" />
                 <div class="caption">Insertar imagen 1: <input type="file" id="fileInput" name="file" /></div>
               </div>
-            
-            
-            
               <div class="inputoutput">
                 <canvas id="canvasOutput" ></canvas>
-                <div class="caption">canvasOutput</div>
+                <div class="caption">Salida de la imagen: </div>
               </div>
             </div>
+            <!--Muestro la imagen-->
             <script type="text/javascript">
               let imgElement = document.getElementById('imageSrc');
               let inputElement = document.getElementById('fileInput');
               inputElement.addEventListener('change', (e) => {
                 imgElement.src = URL.createObjectURL(e.target.files[0]);
               }, false);
-             
             imgElement.onload = function() {
               let mat = cv.imread(imgElement);
               cv.imshow('canvasOutput', mat);
               mat.delete();
-            };
-            </script>   
-        </dev>
-        <dev class = imagen2>
-            <div class="inputoutput">
-                <img id="imageSrc2" alt="No Image" />
-                <div class="caption">Insertar imagen 2:  <input type="file" id="fileInput2" name="file" /></div>
-              </div>
-            
-            
-            
-              <div class="inputoutput">
-                <canvas id="canvasOutput2" ></canvas>
-                <div class="caption">canvasOutput</div>
-              </div>
-            </div>
-            <script type="text/javascript">
-              let imgElement2 = document.getElementById('imageSrc2');
-              let inputElement2 = document.getElementById('fileInput2');
-              inputElement2.addEventListener('change', (e) => {
-                imgElement2.src = URL.createObjectURL(e.target.files[0]);
-              }, false);
-             
-            imgElement2.onload = function() {
-              let mat = cv.imread(imgElement2);
-              cv.imshow('canvasOutput2', mat);
-              mat.delete();
-            };
-            </script>   
+            };  
+            </script>
 
-
-        </dev>
+<dev class = imagen2>
+  <div class="inputoutput">
+      <img id="imageSrc2" alt="No Image" />
+      <div class="caption">Insertar imagen 2:  <input type="file" id="fileInput2" name="file" /></div>
+    </div>
+    <div class="inputoutput">
+      <canvas id="canvasOutput2" ></canvas>
+      <div class="caption">Salida de la imagen: </div>
+    </div>
+  </div>
+  <script type="text/javascript">
+    let imgElement2 = document.getElementById('imageSrc2');
+    let inputElement2 = document.getElementById('fileInput2');
+    inputElement2.addEventListener('change', (e) => {
+      imgElement2.src = URL.createObjectURL(e.target.files[0]);
+    }, false);
+   
+  imgElement2.onload = function() {
+    let mat = cv.imread(imgElement2);
+    cv.imshow('canvasOutput2', mat);
+    mat.delete();
+  };
+  </script>   
 
 
 
+        <!--Carga Asincronica del archivo opencv.js-->
+        <script async src="opencv.js" onload="onOpenCvReady();" type="text/javascript"></script> 
+
+      
     </body>
 </html>
+
