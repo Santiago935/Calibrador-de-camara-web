@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset = "utf-8">
+        <title> MenuDeCamara </title>
+    </head>
+    <body>
+
+        <dev class = textoInicial>
+            <h1>
+                Introduccion
+            </h1>
+            <p>Por ahora esta pagina servira de prototipo para la calibración de camara. <br>
+                La idea es que el usuario inserte varias imagenes y que la pagina le entregue <br>
+                un archivo con los coeficientes y la matriz de calibración
+            </p>
+
+            <h2>Insertar imagenes</h2>
+        </dev>
+        <dev class = imagen1>
+            <div class="inputoutput">
+                <img id="imageSrc" alt="No Image" />
+                <div class="caption">Insertar imagen 1: <input type="file" id="fileInput" name="file" /></div>
+              </div>
+            
+            
+            
+              <div class="inputoutput">
+                <canvas id="canvasOutput" ></canvas>
+                <div class="caption">canvasOutput</div>
+              </div>
+            </div>
+            <script type="text/javascript">
+              let imgElement = document.getElementById('imageSrc');
+              let inputElement = document.getElementById('fileInput');
+              inputElement.addEventListener('change', (e) => {
+                imgElement.src = URL.createObjectURL(e.target.files[0]);
+              }, false);
+             
+            imgElement.onload = function() {
+              let mat = cv.imread(imgElement);
+              cv.imshow('canvasOutput', mat);
+              mat.delete();
+            };
+            </script>   
+        </dev>
+        <dev class = imagen2>
+            <div class="inputoutput">
+                <img id="imageSrc2" alt="No Image" />
+                <div class="caption">Insertar imagen 2:  <input type="file" id="fileInput2" name="file" /></div>
+              </div>
+            
+            
+            
+              <div class="inputoutput">
+                <canvas id="canvasOutput2" ></canvas>
+                <div class="caption">canvasOutput</div>
+              </div>
+            </div>
+            <script type="text/javascript">
+              let imgElement2 = document.getElementById('imageSrc2');
+              let inputElement2 = document.getElementById('fileInput2');
+              inputElement2.addEventListener('change', (e) => {
+                imgElement2.src = URL.createObjectURL(e.target.files[0]);
+              }, false);
+             
+            imgElement2.onload = function() {
+              let mat = cv.imread(imgElement2);
+              cv.imshow('canvasOutput2', mat);
+              mat.delete();
+            };
+            </script>   
+
+
+        </dev>
+
+
+
+    </body>
+</html>
