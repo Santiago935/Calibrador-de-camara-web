@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset = "utf-8">
+        <title>Tutorial de OpenCv</title>
+    </head>
+    <body>
+        <h1>Tutorial Imagen</h1>
+
+        <!-- Descargo la libreria OpenCV.js-->
+        <p id="status">OpenCV.js is loading...</p>
+        <script>
+          var Module = {
+        // https://emscripten.org/docs/api_reference/module.html#Module.onRuntimeInitialized
+        onRuntimeInitialized() {
+          document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
+        }
+      }; 
+          </script>   
+        <script async src="opencv.js" onload="onOpenCvReady();" type="text/javascript"></script> 
+  
+        <img id = "in_imagenTest">
+        <input type = "file" id = "in_archivo">
+        <p>Salida de imagen: </p>
+        <canvas id = "out_imagenTest">
+            <p>Aca se vera la imagen</p>
+        </canvas>
+
+        <p>Propiedades:</p>
+        <div id="properties">
+            <p>No hay imagen para ver propiedades</p>
+        </div>
+        
+
+        <!-- Codigo -->
+        <script type = "text/javascript">
+            //Cargar y mostrar imagen
+            let imagen = document.getElementById("in_imagenTest")
+            let archivo = document.getElementById("in_archivo")
+            archivo.addEventListener("change", (e) => {imagen.src = URL.createObjectURL(e.target.files[0])}, false);
+
+
+            let propertiesElement = document.getElementById("properties");
+            imagen.onload = function() {
+              let src = cv.imread(imagen);
+              cv.imshow('out_imagenTest', src);
+              
+
+              //mostrar propiedades de la imagen
+              let properties = `
+                    Ancho de imagen: ${src.cols} px<br>
+                    Altura de imagen: ${src.rows} px<br>
+                    Tamaño de imagen: ${src.size().width} × ${src.size().height}<br>
+                    Profundidad de imagen: ${src.depth()}<br>
+                    Canal de imagen: ${src.channels()}<br>
+                    Tipo de imagen: ${src.type()}<br>
+                `;
+
+                propertiesElement.innerHTML = properties;
+                src.delete();
+            };
+            
+
+        </script>
+
+
+    </body>
+</html>
