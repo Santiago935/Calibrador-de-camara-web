@@ -8,4 +8,4 @@ TutorialImagen es un script donde voy copiando de forma limpia lo aprendido de l
 
 
 
-No operativo. 
+Proyecto no operativo. 
