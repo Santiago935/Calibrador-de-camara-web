@@ -1,88 +1,135 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset = "utf-8">
-        <title> MenuDeCamara </title>
-    </head>
-    <body>
 
-      <p id="status">OpenCV.js is loading...</p>
+<head>
+  <meta charset="utf-8">
+  <title> MenuDeCamara </title>
+</head>
 
-      <script>
-        var Module = {
+<body>
+
+  <p id="status">OpenCV.js is loading...</p>
+
+  <!--Accedo a OpenCV-->
+  <script>
+    var Module = {
       // https://emscripten.org/docs/api_reference/module.html#Module.onRuntimeInitialized
       onRuntimeInitialized() {
         document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
       }
     }; 
-        </script>   
+  </script>
+  <!--Carga Asincronica del archivo opencv.js-->
+  <script async src="opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
 
-        <dev class = textoInicial>
-            <h1>
-                Introduccion
-            </h1>
-            <p>Por ahora esta pagina servira de prototipo para la calibración de camara. <br>
-                La idea es que el usuario inserte varias imagenes y que la pagina le entregue <br>
-                un archivo con los coeficientes y la matriz de calibración
-            </p>
 
-            <h2>Insertar imagenes</h2>
-        </dev>
-        <!-- Hago la carga de la imagen-->
-        <dev class = imagen1>
-            <div class="inputoutput">
-                <img id="imageSrc" alt="No Image" />
-                <div class="caption">Insertar imagen 1: <input type="file" id="fileInput" name="file" /></div>
-              </div>
-              <div class="inputoutput">
-                <canvas id="canvasOutput" ></canvas>
-                <div class="caption">Salida de la imagen: </div>
-              </div>
-            </div>
-            <!--Muestro la imagen-->
-            <script type="text/javascript">
-              let imgElement = document.getElementById('imageSrc');
-              let inputElement = document.getElementById('fileInput');
-              inputElement.addEventListener('change', (e) => {
-                imgElement.src = URL.createObjectURL(e.target.files[0]);
-              }, false);
-            imgElement.onload = function() {
-              let mat = cv.imread(imgElement);
-              cv.imshow('canvasOutput', mat);
-              mat.delete();
-            };  
-            </script>
 
-<dev class = imagen2>
-  <div class="inputoutput">
-      <img id="imageSrc2" alt="No Image" />
-      <div class="caption">Insertar imagen 2:  <input type="file" id="fileInput2" name="file" /></div>
-    </div>
-    <div class="inputoutput">
-      <canvas id="canvasOutput2" ></canvas>
-      <div class="caption">Salida de la imagen: </div>
-    </div>
+
+  <div class=textoInicial>
+    <h1>
+      Introduccion
+    </h1>
+    <p> Por ahora esta pagina servira de prototipo para la calibración de camara. <br>
+      La idea es que el usuario abra la camara y atravez de la camara detecte <br>
+      un patron de ajedrez.<br>
+      Una vez detectado el patron, el usuario toma foto (entre 20 y 30), y el sistema<br>
+      calcula la matriz y los coeficientes de distorcion, permitiendo al usuario descargarlo <br>
+      como un archivo.
+    </p>
+
+    <h2>Su Camara: </h2>
   </div>
+
+
+  <!-- Hago la carga de la imagen-->
+  <div class=camara>
+
+    <video id="videoInput" width="640" height="480" autoplay></video>
+    <h3>Propiedades:</h3>
+    <p id="propiedades"></p>
+
+  </div>
+
+
+  <div class=tableroReferencia>
+    <img src="pattern_chessboard6x9.jpg" width="640" height="480">
+
+  </div>
+
+
+  <div class="camaraPatron">
+
+  </div>
+
   <script type="text/javascript">
-    let imgElement2 = document.getElementById('imageSrc2');
-    let inputElement2 = document.getElementById('fileInput2');
-    inputElement2.addEventListener('change', (e) => {
-      imgElement2.src = URL.createObjectURL(e.target.files[0]);
-    }, false);
-   
-  imgElement2.onload = function() {
-    let mat = cv.imread(imgElement2);
-    cv.imshow('canvasOutput2', mat);
-    mat.delete();
-  };
-  </script>   
+
+    //Utilizo el tablero de una imagen.
+    function cargarImagenTablero() {
+      let imChessboard = cv.imread("pattern_chessboard6x9.jpg")
+      let salidaImagen = document.getElementById("outputTablero");
+      cv.imshow(salidaImagen, imChessboard)
+      imChessboard.delete()
+    }
 
 
 
-        <!--Carga Asincronica del archivo opencv.js-->
-        <script async src="opencv.js" onload="onOpenCvReady();" type="text/javascript"></script> 
+    //Crea el tablero de ajedrez
+    const crearBordeTablero = function (chessBoard) {
 
-      
-    </body>
+      let aux = new cv.Mat(chessBoard.width * chessBoard.height, 3, cv.CV_32F);
+      for (let i = 0; i < chessBoard.height; i++) {
+        for (let j = 0; j < chessBoard.width; j++) {
+          let idx = i * chessBoard.width + j;
+          aux.data32F[idx * 3] = j;
+          aux.data32F[idx * 3 + 1] = i;
+          aux.data32F[idx * 3 + 2] = 0;
+        }
+      }
+
+      return aux
+
+    }
+
+    //Pide y muestra el video en camara
+    let video = document.getElementById("videoInput"); 
+    navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+      .then(function (stream) {
+        video.srcObject = stream;
+        video.play();
+      })
+      .catch(function (err) {
+        console.log("Ocurrio un error: " + err);
+      });
+
+
+      //Evento donde obtengo y cargo las propiedades de la camara. 
+    video.onloadedmetadata = function () {
+
+      let width = video.videoWidth
+      let height = video.videoHeight
+      document.getElementById("propiedades").textContent = "Propiedades: " + width + "x" + height;
+
+    }
+
+
+    let chessBoard = { width: 9, height: 6 };
+    let gradualDarkness = 0.90
+    let cornersubpixTerminationCriteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+    let imgPoints = []
+    let objPoints = []
+
+    let chessboardPointCloud3D = crearBordeTablero(chessBoard);
+
+
+
+
+    // Asegúrate de tener un canvas en tu HTML para mostrar la imagen:
+
+
+
+
+
+  </script>
+</body>
+
 </html>
-
