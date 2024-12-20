@@ -1,70 +1,100 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="es">
 
 <head>
-    <meta charset="utf-8">
-    <title>Tutorial de OpenCv</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capturar Fotograma de la Cámara</title>
 </head>
+
+
 
 <body>
 
-    <p id="status">OpenCV.js is loading...</p>
-    <script>
-        var Module = {
-            // https://emscripten.org/docs/api_reference/module.html#Module.onRuntimeInitialized
-            onRuntimeInitialized() {
-                document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
-            }
-        }; 
-    </script>
-    <script async src="opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+  <p id="status">OpenCV.js is loading...</p>
+
+  <script>
+    var Module = {
+      // https://emscripten.org/docs/api_reference/module.html#Module.onRuntimeInitialized
+      onRuntimeInitialized() {
+        document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
+        inicializoVideo()
+      }
+    }; 
+  </script>
+  <!--Carga Asincronica del archivo opencv.js-->
+  <script async src="opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
 
 
-    <p>Video: </p>
-    <video id="videoInput" width="640" height="480" autoplay></video>
-    <p>Video procesado: </p>
-    <canvas id="canvasOutput" width="640" height="480"></canvas>
 
-    <script>
-        //Codigo para capturar video y mostrarlo?
-        let video = document.getElementById("videoInput"); // video is the id of video tag
-        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-            .then(function (stream) {
-                video.srcObject = stream;
-                video.play();
-            })
-            .catch(function (err) {
-                console.log("An error occurred! " + err);
-            });
 
-        //Codigo para procesar el video
-        let src = new cv.Mat(height, width, cv.CV_8UC4);
-        let dst = new cv.Mat(height, width, cv.CV_8UC1);
-        let cap = new cv.VideoCapture(videoSource);
-        const FPS = 30;
+  <h1>Capturar Fotograma de la Cámara</h1>
 
-        function processVideo() {
-            let begin = Date.now();
-            cap.read(src);
-            cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
-            cv.imshow("canvasOutput", dst);
-            // schedule next one.
-            let delay = 1000 / FPS - (Date.now() - begin);
-            setTimeout(processVideo, delay);
+  <!-- Video Elemento para mostrar la cámara -->
+  <video id="videoInput" width="640" height="480"></video>
+
+  <!-- Canvas Elemento donde dibujamos el fotograma capturado -->
+  <canvas id="canvasOutput" width="640" height="480"></canvas>
+
+
+
+
+  <script type="text/javascript">
+
+    let video = document.getElementById("videoInput"); // video is the id of video tag
+    let streaming = false; // Variable para controlar el estado del video
+    let src, dst, cap;
+    const FPS = 30;
+
+
+    //pregunto y muestro video
+    navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+      .then(function (stream) {
+        video.srcObject = stream;
+        video.play();
+      })
+      .catch(function (err) {
+        console.error("An error occurred! " + err);
+      });
+
+      //preparo las cosas. 
+    function inicializoVideo() {
+      video.addEventListener('loadeddata', () => {    //evento que activa automaticamente
+        src = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+        dst = new cv.Mat(video.height, video.width, cv.CV_8UC1);
+        cap = new cv.VideoCapture(video);
+        streaming = true;
+        processVideo();
+      });
+
+    }
+
+
+
+    //Transformo en gris y reproduzco
+    function processVideo() {
+      try {
+        if (!streaming) {
+          // clean and stop.
+          src.delete();
+          dst.delete();
+          return;
         }
+        let begin = Date.now();
+        // start processing.
+        cap.read(src);
+        cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
+        cv.imshow('canvasOutput', dst);
+        // schedule the next one.
+        let delay = 1000 / FPS - (Date.now() - begin);
+        setTimeout(processVideo, delay);
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
-        // schedule first one.
-        setTimeout(processVideo, 0);
-
-        src.delete();
-                dst.delete();
-                cap.delete();
-
-    </script>
-
-
+  </script>
 
 </body>
-
 
 </html>
