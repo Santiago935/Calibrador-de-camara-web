@@ -1,24 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 
 <head>
   <meta charset="utf-8">
   <title> MenuDeCamara </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    #video {
-      display: block;
-      margin: 10px auto;
-      width: 640px;
-      height: 480px;
-    }
-
-    #canvas {
-      display: block;
-      margin: 10px auto;
-      border: 1px solid black;
-    }
-  </style>
 </head>
 
 <body>
@@ -31,6 +18,7 @@
       // https://emscripten.org/docs/api_reference/module.html#Module.onRuntimeInitialized
       onRuntimeInitialized() {
         document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
+        preparoVideo();
       }
     }; 
   </script>
@@ -58,11 +46,12 @@
 
   <div class="camara">
 
-    <video id="videoInput" autoplay></video>
+    <video id="videoInput" width="640" height="480"></video> <canvas id="salida1" width="640" height="480"></canvas>
     <h3>Propiedades:</h3>
     <p id="propiedades"></p>
 
   </div>
+
 
 
   <div class="tableroReferencia">
@@ -71,19 +60,15 @@
   </div>
 
 
-  <div class="camaraPatron">
-    <canvas id="canvasOutput" autoplay></canvas>
-  </div>
 
   <script type="text/javascript">
 
-
-    let video = document.getElementById("videoInput");
-    let canvas = document.getElementById("canvasOutput");
-    const ctx = canvas.getContext('2d');
-
-
     //Pide y muestra el video en camara
+    let video = document.getElementById('videoInput');
+
+    let streaming = false; // Variable para controlar el estado del video
+    let src, gris, cap;
+    const FPS = 30;
 
     navigator.mediaDevices.getUserMedia({ video: true, audio: false })
       .then(function (stream) {
@@ -91,92 +76,58 @@
         video.play();
       })
       .catch(function (err) {
-        console.log("Ocurrio un error: " + err);
+        console.error("Ocurrio un error: " + err);
       });
 
-
-
-
-
-
-
-
+    
     //Evento donde obtengo y cargo las propiedades de la camara. 
     video.onloadedmetadata = function () {
 
       let width = video.videoWidth
       let height = video.videoHeight
       document.getElementById("propiedades").textContent = "Propiedades: " + width + "x" + height;
-      procesarVideo(); 
+
     };
 
-      function procesarVideo() {
+    function preparoVideo(){
 
-        let imgPoints = [];
-        let objPoints = [];
-        let imChessboard = cv.imread("pattern_chessboard6x9.jpg");
-       
-
-            //Crea el tablero de ajedrez
-    const crearBordeTablero = function (chessBoard) {
-
-let aux = new cv.Mat(chessBoard.width * chessBoard.height, 3, cv.CV_32F);
-for (let i = 0; i < chessBoard.height; i++) {
-  for (let j = 0; j < chessBoard.width; j++) {
-    let idx = i * chessBoard.width + j;
-    aux.data32F[idx * 3] = j;
-    aux.data32F[idx * 3 + 1] = i;
-    aux.data32F[idx * 3 + 2] = 0;
-  }
-}
-return aux
-}
-let chessBoard = crearBordeTablero(9,6);
-
-        // Determinar el tamaño
-        let patternSize = new cv.Size(9, 6);
-
-
-
-        // Capturar el fotograma. Como no existe funcion cam() debemos crear una propia:
-        setInterval(() => {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const mat = cv.matFromImageData(frame);
-
-        //Trnasformas imagen a gris.
-        let gray = new cv.Mat();
-        cv.cvtColor(mat, gray, cv.COLOR_RGBA2GRAY);
-
-
-        //Detecccion y dibujado de puntos.
-        let corners = new cv.Mat();
-        let found = cv.findChessboardCorners(gray, patternSize, corners);
-        if (found) {
-          cv.cornerSubPix(gray, corners, new cv.Size(5, 5), new cv.Size(-1, -1),
-            new cv.TermCriteria(cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.1));
-          cv.drawChessboardCorners(mat, patternSize, corners, found);
-          imgPoints.push(corners.clone());
-          objPoints.push(chessBoard.clone());
-        }
-
-        cv.imshow(canvas, mat);
-
-
-        gray.delete();
-        corners.delete();
-        mat.delete();
-
-        // Continuar procesando el siguiente fotograma
-        
-      }, 33);
-
+      video.addEventListener('loadeddata', () => {    //evento que activa automaticamente
+        src = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+        gris = new cv.Mat(video.height, video.width, cv.CV_8UC1);
+        cap = new cv.VideoCapture(video);
+        streaming = true;
+        detectarYdibujarPatron();
+      });
 
 
     }
+    function detectarYdibujarPatron () {
+
+      try {
+        if (!streaming) {
+          // clean and stop.
+          src.delete();
+          gris.delete();
+          return;
+        }
+        let begin = Date.now();
+        // start processing.
+        cap.read(src);
+        cv.cvtColor(src, gris, cv.COLOR_RGBA2GRAY);
+        cv.imshow('salida1', gris);
+        // schedule the next one.
+        let delay = 1000 / FPS - (Date.now() - begin);
+        setTimeout(detectarYdibujarPatron, delay);      //Esto es el que hara un bucle
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+
 
 
 
   </script>
 </body>
+
 </html>
