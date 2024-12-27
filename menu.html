@@ -3,26 +3,22 @@
 
 <head>
   <meta charset="utf-8">
-  <title> MenuDeCamara </title>
+  <title>Calibración de Cámara</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 </head>
 
 <body>
-
   <p id="status">OpenCV.js is loading...</p>
 
-  <!--Accedo a OpenCV-->
   <script>
-    var Module = {
-      // https://emscripten.org/docs/api_reference/module.html#Module.onRuntimeInitialized
-      onRuntimeInitialized() {
-        document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
-        preparoVideo();
-      }
-    }; 
+    function onOpenCvReady() {
+      console.log('OpenCV Ready', cv);
+      document.getElementById('status').textContent = "OpenCV.js está listo";
+
+      preparoVideo();  // Asegúrate de que se llama cuando OpenCV esté listo
+    }
   </script>
-  <!--Carga Asincronica del archivo opencv.js-->
   <script async src="opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
 
 
@@ -43,19 +39,25 @@
     <h2>Su Camara: </h2>
   </div>
 
+  <div class="botones">
+    <input type="button" value="capturar"> <input type="button" value="calcular Parametros">
+  </div>
+
 
   <div class="camara">
 
     <video id="videoInput" width="640" height="480"></video> <canvas id="salida1" width="640" height="480"></canvas>
     <h3>Propiedades:</h3>
+    <p id="bandera"></p>
     <p id="propiedades"></p>
 
   </div>
 
 
 
+
   <div class="tableroReferencia">
-    <img id="tablero" src="pattern_chessboard6x9.jpg" width="640" height="480">
+    <img id="tablero" src="pattern.png" width="640" height="480">
 
   </div>
 
@@ -63,13 +65,18 @@
 
   <script type="text/javascript">
 
-    //Pide y muestra el video en camara
-    let video = document.getElementById('videoInput');
 
+
+    let video = document.getElementById('videoInput');
+    const chessBoard = [9, 6];  // Tamaño del patrón de ajedrez
+
+    let corner;
+    let chessboardPointCloud3D = [];
     let streaming = false; // Variable para controlar el estado del video
-    let src, gris, cap;
+    let frame, gris, cap;
     const FPS = 30;
 
+    //Pide y muestra el video en camara
     navigator.mediaDevices.getUserMedia({ video: true, audio: false })
       .then(function (stream) {
         video.srcObject = stream;
@@ -79,7 +86,7 @@
         console.error("Ocurrio un error: " + err);
       });
 
-    
+
     //Evento donde obtengo y cargo las propiedades de la camara. 
     video.onloadedmetadata = function () {
 
@@ -89,11 +96,25 @@
 
     };
 
-    function preparoVideo(){
+    //Funcion que prepara las cosas una vez que se active la camara.
+    function preparoVideo() {
 
-      video.addEventListener('loadeddata', () => {    //evento que activa automaticamente
-        src = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+      video.addEventListener('loadeddata', () => {    //evento que activa automaticamente al activarse la camara
+        frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
         gris = new cv.Mat(video.height, video.width, cv.CV_8UC1);
+        corner = new cv.Mat();
+
+        /*
+        ??
+        //creo en chessboardPointCloud3D el eje de coordenadas.
+for (let i = 0; i < chessBoard.height; i++) {
+  for (let j = 0; j < chessBoard.width; j++) {
+    chessboardPointCloud3D.push([j, i, 0]); // Coordenadas en 3D (x, y, z)
+  }
+}
+
+          */
+
         cap = new cv.VideoCapture(video);
         streaming = true;
         detectarYdibujarPatron();
@@ -101,28 +122,71 @@
 
 
     }
-    function detectarYdibujarPatron () {
+
+    //Funcion que Detecta y dibuja el patron sobre la camara (por ahora en la camara gris)
+    function detectarYdibujarPatron() {
 
       try {
         if (!streaming) {
           // clean and stop.
-          src.delete();
+          frame.delete();
           gris.delete();
+          chessboardPointCloud3D.delete();
+          corner.delete();
+          ajustado.delete();
           return;
         }
+
+
+
         let begin = Date.now();
         // start processing.
-        cap.read(src);
-        cv.cvtColor(src, gris, cv.COLOR_RGBA2GRAY);
-        cv.imshow('salida1', gris);
+
+        cap.read(frame);
+
+        let width = video.videoWidth;
+        let height = video.videoHeight;
+        let newSize = new cv.Size(640, Math.round(640 * height / width));
+
+        cv.resize(frame, frame, newSize);
+        cv.cvtColor(frame, gris, cv.COLOR_RGBA2GRAY);
+        corner.delete();
+        corner = new cv.Mat();
+
+        console.log("Procesando patrón de ajedrez...");
+console.log("Dimensiones de la imagen: ", gris.rows, gris.cols);
+let found = cv.findChessboardCorners(gris, chessBoard, corner);
+
+console.log("Resultado de detección: ", found);
+
+
+
+        if (found) {
+          document.getElementById("bandera").textContent = "Encontrado";
+          cv.drawChessboardCorners(frame, chessBoard, corner, found);
+        }
+        else
+          document.getElementById("bandera").textContent = "No Encontrado";
+
+
+
+
+        cv.imshow('salida1', frame);
         // schedule the next one.
         let delay = 1000 / FPS - (Date.now() - begin);
-        setTimeout(detectarYdibujarPatron, delay);      //Esto es el que hara un bucle
+        setTimeout(detectarYdibujarPatron, delay);      //Esto es el que hara un bucle while
       } catch (err) {
         console.error(err);
       }
     };
 
+
+    //Evento donde al cerrar la ventana detiene todo.
+    window.onbeforeunload = () => {
+      if (video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+      }
+    };
 
 
 
