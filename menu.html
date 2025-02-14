@@ -11,6 +11,7 @@
 <body>
   <p id="status">OpenCV.js is loading...</p>
 
+  //El script llama y prepara la versin mas reciente de Opencv.js
   <script>
     function onOpenCvReady() {
       console.log('OpenCV Ready', cv);
@@ -23,7 +24,7 @@
 
 
 
-
+//CODIGO HTML
   <div class=textoInicial>
     <h1>
       Introduccion
@@ -53,16 +54,13 @@
 
   </div>
 
-
-
-
   <div class="tableroReferencia">
     <img id="tablero" src="pattern.png" width="640" height="480">
 
   </div>
 
 
-
+  //INICIA CODIGO JAVASCRIPT
   <script type="text/javascript">
 
 
@@ -106,7 +104,7 @@
 
         /*
   
-        //creo en chessboardPointCloud3D el eje de coordenadas.
+        //creo en chessboardPointCloud3D el eje de coordenadas. Esto era para armacenar los puntos que encontraba con findchessboardcorners
 for (let i = 0; i < chessBoard.height; i++) {
   for (let j = 0; j < chessBoard.width; j++) {
     chessboardPointCloud3D.push([j, i, 0]); // Coordenadas en 3D (x, y, z)
