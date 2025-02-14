@@ -16,7 +16,7 @@
       console.log('OpenCV Ready', cv);
       document.getElementById('status').textContent = "OpenCV.js está listo";
 
-      preparoVideo();  // Asegúrate de que se llama cuando OpenCV esté listo
+      preparoVideo();  // llama a esta funcion cuando OpenCV esta listo
     }
   </script>
   <script async src="opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
@@ -105,7 +105,7 @@
         corner = new cv.Mat();
 
         /*
-        ??
+  
         //creo en chessboardPointCloud3D el eje de coordenadas.
 for (let i = 0; i < chessBoard.height; i++) {
   for (let j = 0; j < chessBoard.width; j++) {
@@ -117,7 +117,7 @@ for (let i = 0; i < chessBoard.height; i++) {
 
         cap = new cv.VideoCapture(video);
         streaming = true;
-        detectarYdibujarPatron();
+        detectarYdibujarPatron();    //Llamo a la función
       });
 
 
@@ -155,7 +155,7 @@ for (let i = 0; i < chessBoard.height; i++) {
 
         console.log("Procesando patrón de ajedrez...");
 console.log("Dimensiones de la imagen: ", gris.rows, gris.cols);
-let found = cv.findChessboardCorners(gris, chessBoard, corner);
+let found = cv.findChessboardCorners(gris, chessBoard, corner);    //Aca se rompe el codigo por esta funcion
 
 console.log("Resultado de detección: ", found);
 
@@ -163,7 +163,7 @@ console.log("Resultado de detección: ", found);
 
         if (found) {
           document.getElementById("bandera").textContent = "Encontrado";
-          cv.drawChessboardCorners(frame, chessBoard, corner, found);
+          cv.drawChessboardCorners(frame, chessBoard, corner, found);  //Esta funcion tampoco funciona...
         }
         else
           document.getElementById("bandera").textContent = "No Encontrado";
