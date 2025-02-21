@@ -11,7 +11,7 @@
 <body>
   <p id="status">OpenCV.js is loading...</p>
 
-  //El script llama y prepara la versin mas reciente de Opencv.js
+  <!-- El script llama y prepara la versin mas reciente de Opencv.js -->
   <script>
     function onOpenCvReady() {
       console.log('OpenCV Ready', cv);
@@ -23,8 +23,8 @@
   <script async src="opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
 
 
+<!-- CODIGO HTML -->
 
-//CODIGO HTML
   <div class=textoInicial>
     <h1>
       Introduccion
@@ -40,36 +40,40 @@
     <h2>Su Camara: </h2>
   </div>
 
-  <div class="botones">
-    <input type="button" value="capturar"> <input type="button" value="calcular Parametros">
-  </div>
+
 
 
   <div class="camara">
 
-    <video id="videoInput" width="640" height="480"></video> <canvas id="salida1" width="640" height="480"></canvas>
+    <style>
+      .camara {
+        display: flex;
+        margin-right: 20px; 
+        text-align: center; 
+      }
+    </style>
+
+    <video id="videoInput" width="640" height="480"></video> 
+    <canvas id="salida1" width="640" height="480"></canvas>
+
+
+  </div>
+
+  <div class="botones">
     <h3>Propiedades:</h3>
     <p id="bandera"></p>
     <p id="propiedades"></p>
-
-  </div>
-
-  <div class="tableroReferencia">
-    <img id="tablero" src="pattern.png" width="640" height="480">
-
+    <input type="button" value="capturar"> 
+    <input type="button" value="calcular Parametros">
   </div>
 
 
-  //INICIA CODIGO JAVASCRIPT
+  <!-- INICIA CODIGO JAVASCRIPT -->
   <script type="text/javascript">
 
 
 
     let video = document.getElementById('videoInput');
-    const chessBoard = [9, 6];  // Tamaño del patrón de ajedrez
-
-    let corner;
-    let chessboardPointCloud3D = [];
     let streaming = false; // Variable para controlar el estado del video
     let frame, gris, cap;
     const FPS = 30;
@@ -101,17 +105,6 @@
         frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
         gris = new cv.Mat(video.height, video.width, cv.CV_8UC1);
         corner = new cv.Mat();
-
-        /*
-  
-        //creo en chessboardPointCloud3D el eje de coordenadas. Esto era para armacenar los puntos que encontraba con findchessboardcorners
-for (let i = 0; i < chessBoard.height; i++) {
-  for (let j = 0; j < chessBoard.width; j++) {
-    chessboardPointCloud3D.push([j, i, 0]); // Coordenadas en 3D (x, y, z)
-  }
-}
-
-          */
 
         cap = new cv.VideoCapture(video);
         streaming = true;
@@ -151,24 +144,6 @@ for (let i = 0; i < chessBoard.height; i++) {
         corner.delete();
         corner = new cv.Mat();
 
-        console.log("Procesando patrón de ajedrez...");
-console.log("Dimensiones de la imagen: ", gris.rows, gris.cols);
-let found = cv.findChessboardCorners(gris, chessBoard, corner);    //Aca se rompe el codigo por esta funcion
-
-console.log("Resultado de detección: ", found);
-
-
-
-        if (found) {
-          document.getElementById("bandera").textContent = "Encontrado";
-          cv.drawChessboardCorners(frame, chessBoard, corner, found);  //Esta funcion tampoco funciona...
-        }
-        else
-          document.getElementById("bandera").textContent = "No Encontrado";
-
-
-
-
         cv.imshow('salida1', frame);
         // schedule the next one.
         let delay = 1000 / FPS - (Date.now() - begin);
@@ -189,6 +164,10 @@ console.log("Resultado de detección: ", found);
 
 
 
+  </script>
+</body>
+
+</html>
   </script>
 </body>
 
