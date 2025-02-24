@@ -122,9 +122,7 @@
           // clean and stop.
           frame.delete();
           gris.delete();
-          chessboardPointCloud3D.delete();
           corner.delete();
-          ajustado.delete();
           return;
         }
 
@@ -141,8 +139,31 @@
 
         cv.resize(frame, frame, newSize);
         cv.cvtColor(frame, gris, cv.COLOR_RGBA2GRAY);
-        corner.delete();
-        corner = new cv.Mat();
+
+        
+
+        let diccionario = new cv.aruco_Dictionary(); //obtengo Diccionario ¿pero como relleno el campo? DICT_NUMEROS_X_NUMEROS
+
+        let parametros = new cv.aruco_DetectorParameters();   //Obtengo parametros?
+
+        let detector = new cv.aruco_ArucoDetector(diccionario, parametros);   //DetectMarkers() fue reemplazado por esta funcion (creo)
+
+
+        let markerCorners = new cv.MatVector();
+        let markerIds = new cv.Mat();
+        let rejectedCandidates = new cv.MatVector();
+
+        detector.aruco_detectMarker(gris, markerCorners, markerIds, rejectedCandidates);
+
+        cv.aruco_drawDetectedMarkers(frame, esquinas, ids)
+        //Dibujo si he detectado
+
+    
+
+    esquinas.delete();
+    ids.delete();
+
+
 
         cv.imshow('salida1', frame);
         // schedule the next one.
@@ -166,6 +187,8 @@
 
   </script>
 </body>
+
+</html>
 
 </html>
   </script>
