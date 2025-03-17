@@ -1,198 +1,183 @@
 <!DOCTYPE html>
 <html lang="es">
 
-  
 <head>
-  <meta charset="utf-8">
-  <title>Calibración de Cámara</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <title>Calibración de Cámara2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 </head>
 
 <body>
-  <p id="status">OpenCV.js is loading...</p>
+    <p id="status">OpenCV.js is loading...</p>
 
-  <!-- El script llama y prepara la versin mas reciente de Opencv.js -->
-  <script>
-    function onOpenCvReady() {
-      console.log('OpenCV Ready', cv);
-      document.getElementById('status').textContent = "OpenCV.js está listo";
-
-      preparoVideo();  // llama a esta funcion cuando OpenCV esta listo
-    }
-  </script>
-  <script async src="opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+    <!-- El script llama y prepara la versin mas reciente de Opencv.js -->
+    <script>
+        function onOpenCVReady() {
+            console.log('OpenCV Ready', cv);
+            document.getElementById('status').textContent = "OpenCV.js está listo";
+            document.addEventListener("DOMContentLoaded", () => {
+        preparoVideo(); // llama a esta funcion cuando OpenCV esta listo
+    });
 
 
-<!-- CODIGO HTML -->
-
-  <div class=textoInicial>
-    <h1>
-      Introduccion
-    </h1>
-    <p> Por ahora esta pagina servira de prototipo para la calibración de camara. <br>
-      La idea es que el usuario abra la camara y atravez de la camara detecte <br>
-      un patron de ajedrez.<br>
-      Una vez detectado el patron, el usuario toma foto (entre 20 y 30), y el sistema<br>
-      calcula la matriz y los coeficientes de distorcion, permitiendo al usuario descargarlo <br>
-      como un archivo.
-    </p>
-
-    <h2>Su Camara: </h2>
-  </div>
+        }
+    </script>
+    <script async src="https://cdn.jsdelivr.net/gh/ganwenyao/opencv_js@master/docs/opencv.js" onload="onOpenCVReady();"
+        type="text/javascript"></script>
 
 
+    <!-- CODIGO HTML -->
 
+    <div class=textoInicial>
+        <h1>
+            Introduccion
+        </h1>
+        <p> Por ahora esta pagina servira de prototipo para la calibración de camara. <br>
+            La idea es que el usuario abra la camara y atravez de la camara detecte <br>
+            un patron de ajedrez.<br>
+            Una vez detectado el patron, el usuario toma foto (entre 20 y 30), y el sistema<br>
+            calcula la matriz y los coeficientes de distorcion, permitiendo al usuario descargarlo <br>
+            como un archivo.
+        </p>
 
-  <div class="camara">
-
-    <style>
-      .camara {
-        display: flex;
-        margin-right: 20px; 
-        text-align: center; 
-      }
-    </style>
-
-    <video id="videoInput" width="640" height="480"></video> 
-    <canvas id="salida1" width="640" height="480"></canvas>
-
-
-  </div>
-
-  <div class="botones">
-    <h3>Propiedades:</h3>
-    <p id="bandera"></p>
-    <p id="propiedades"></p>
-    <input type="button" value="capturar"> 
-    <input type="button" value="calcular Parametros">
-  </div>
-
-
-  <!-- INICIA CODIGO JAVASCRIPT -->
-  <script type="text/javascript">
+        <h2>Su Camara: </h2>
+    </div>
 
 
 
-    let video = document.getElementById('videoInput');
-    let streaming = false; // Variable para controlar el estado del video
-    let frame, gris, cap;
-    const FPS = 30;
 
-    //Pide y muestra el video en camara
-    navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-      .then(function (stream) {
-        video.srcObject = stream;
-        video.play();
-      })
-      .catch(function (err) {
-        console.error("Ocurrio un error: " + err);
-      });
+    <div class="camara">
+
+        <style>
+            .camara {
+                display: flex;
+                margin-right: 20px;
+                text-align: center;
+            }
+        </style>
+
+        <video id="videoInput" width="640" height="480"></video>
 
 
-    //Evento donde obtengo y cargo las propiedades de la camara. 
-    video.onloadedmetadata = function () {
+    </div>
 
-      let width = video.videoWidth
-      let height = video.videoHeight
-      document.getElementById("propiedades").textContent = "Propiedades: " + width + "x" + height;
-
-    };
-
-    //Funcion que prepara las cosas una vez que se active la camara.
-    function preparoVideo() {
-
-      video.addEventListener('loadeddata', () => {    //evento que activa automaticamente al activarse la camara
-        frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
-        gris = new cv.Mat(video.height, video.width, cv.CV_8UC1);
-        corner = new cv.Mat();
-
-        cap = new cv.VideoCapture(video);
-        streaming = true;
-        detectarYdibujarPatron();    //Llamo a la función
-      });
+    <div class="botones">
+        <h3>Propiedades:</h3>
+        <p id="bandera"></p>
+        <p id="propiedades"></p>
+        <input type="button" value="capturar">
+        <input type="button" value="calcular Parametros">
+    </div>
 
 
-    }
+    <!-- INICIA CODIGO JAVASCRIPT -->
+    <script type="text/javascript">
 
-    //Funcion que Detecta y dibuja el patron sobre la camara (por ahora en la camara gris)
-    function detectarYdibujarPatron() {
 
-      try {
-        if (!streaming) {
-          // clean and stop.
-          frame.delete();
-          gris.delete();
-          corner.delete();
-          return;
+
+        let video = document.getElementById('videoInput');
+        let streaming = false; // Variable para controlar el estado del video
+        let frame, gris, cap;
+        const FPS = 30;
+
+        //Pide y muestra el video en camara
+        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            .then(function (stream) {
+                video.srcObject = stream;
+                video.play();
+            })
+            .catch(function (err) {
+                console.error("Ocurrio un error: " + err);
+            });
+
+
+        //Evento donde obtengo y cargo las propiedades de la camara. 
+        video.onloadedmetadata = function () {
+
+            let width = video.videoWidth
+            let height = video.videoHeight
+            document.getElementById("propiedades").textContent = "Propiedades: " + width + "x" + height;
+
+        };
+
+        //Funcion que prepara las cosas una vez que se active la camara.
+        function preparoVideo() {
+
+            video.addEventListener('loadeddata', () => {    //evento que activa automaticamente al activarse la camara
+                let width = video.videoWidth;
+                let height = video.videoHeight;
+                frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+                cap = new cv.VideoCapture(video);
+                streaming = true;
+            
+                detectarYdibujarPatron();    //Llamo a la función
+            });
+
+
         }
 
 
+        function detectarYdibujarPatron() {
 
-        let begin = Date.now();
-        // start processing.
+            try {
+                if (!streaming) {
+                    // clean and stop.
+                    frame.delete();
+                    return;
+                }
 
-        cap.read(frame);
-
-        let width = video.videoWidth;
-        let height = video.videoHeight;
-        let newSize = new cv.Size(640, Math.round(640 * height / width));
-
-        cv.resize(frame, frame, newSize);
-        cv.cvtColor(frame, gris, cv.COLOR_RGBA2GRAY);
-
-        
-
-        let diccionario = new cv.aruco_Dictionary(); //obtengo Diccionario ¿pero como relleno el campo? DICT_NUMEROS_X_NUMEROS
-
-        let parametros = new cv.aruco_DetectorParameters();   //Obtengo parametros?
-
-        let detector = new cv.aruco_ArucoDetector(diccionario, parametros);   //DetectMarkers() fue reemplazado por esta funcion (creo)
+                let begin = Date.now();
 
 
-        let markerCorners = new cv.MatVector();
-        let markerIds = new cv.Mat();
-        let rejectedCandidates = new cv.MatVector();
+                cap.read(frame);
+                cv.cvtColor(frame, frame, cv.COLOR_RGBA2GRAY);
 
-        detector.aruco_detectMarker(gris, markerCorners, markerIds, rejectedCandidates);
-
-        cv.aruco_drawDetectedMarkers(frame, esquinas, ids)
-        //Dibujo si he detectado
-
-    
-
-    esquinas.delete();
-    ids.delete();
+                let dictionary = new cv.Dictionary(cv.DICT_6X6_250);
+                let markerIds = new cv.Mat();
+                let markerCorners = new cv.MatVector();
+                let rvecs = new cv.Mat();
+                let tvecs = new cv.Mat();
 
 
-
-        cv.imshow('salida1', frame);
-        // schedule the next one.
-        let delay = 1000 / FPS - (Date.now() - begin);
-        setTimeout(detectarYdibujarPatron, delay);      //Esto es el que hara un bucle while
-      } catch (err) {
-        console.error(err);
-      }
-    };
+                // Detectar marcadores
+                cv.detectMarkers(frame, dictionary, markerCorners, markerIds);
 
 
-    //Evento donde al cerrar la ventana detiene todo.
-    window.onbeforeunload = () => {
-      if (video.srcObject) {
-        video.srcObject.getTracks().forEach(track => track.stop());
-      }
-    };
+                if (!markerIds.empty()) {
+                    log.console("Encontrado")
+                    cv.drawDetectedMarkers(frame, markerCorners, markerIds);
+
+                }
+
+                cv.imshow('videoInput', frame);
+
+                // Liberar memoria
+                markerCorners.delete();
+                markerIds.delete();
+                rvecs.delete();
+                tvecs.delete();
+
+                // schedule the next detection
+                let delay = 1000 / FPS - (Date.now() - begin);
+                setTimeout(detectarYdibujarPatron, Math.max(0, delay));
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+
+        //Evento donde al cerrar la ventana detiene todo.
+        window.onbeforeunload = () => {
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+            }
+        };
 
 
 
 
-  </script>
-</body>
-
-</html>
-
-</html>
-  </script>
+    </script>
 </body>
 
 </html>
