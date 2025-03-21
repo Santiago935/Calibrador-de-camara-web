@@ -16,9 +16,8 @@
         function onOpenCVReady() {
             console.log('OpenCV Ready', cv);
             document.getElementById('status').textContent = "OpenCV.js está listo";
-            document.addEventListener("DOMContentLoaded", () => {
+
         preparoVideo(); // llama a esta funcion cuando OpenCV esta listo
-    });
 
 
         }
@@ -58,6 +57,7 @@
         </style>
 
         <video id="videoInput" width="640" height="480"></video>
+        <canvas id="videoOutput" width="640" height="480"></canvas>
 
 
     </div>
@@ -76,16 +76,16 @@
 
 
 
-        let video = document.getElementById('videoInput');
+        let src = document.getElementById('videoInput');
         let streaming = false; // Variable para controlar el estado del video
-        let frame, gris, cap;
+        let frame, cap;     //Frame es salida de canvas. 
         const FPS = 30;
 
         //Pide y muestra el video en camara
         navigator.mediaDevices.getUserMedia({ video: true, audio: false })
             .then(function (stream) {
-                video.srcObject = stream;
-                video.play();
+                src.srcObject = stream;
+                src.play();
             })
             .catch(function (err) {
                 console.error("Ocurrio un error: " + err);
@@ -93,10 +93,10 @@
 
 
         //Evento donde obtengo y cargo las propiedades de la camara. 
-        video.onloadedmetadata = function () {
+        src.onloadedmetadata = function () {
 
-            let width = video.videoWidth
-            let height = video.videoHeight
+            let width = src.videoWidth
+            let height = src.videoHeight
             document.getElementById("propiedades").textContent = "Propiedades: " + width + "x" + height;
 
         };
@@ -104,12 +104,12 @@
         //Funcion que prepara las cosas una vez que se active la camara.
         function preparoVideo() {
 
-            video.addEventListener('loadeddata', () => {    //evento que activa automaticamente al activarse la camara
-                let width = video.videoWidth;
-                let height = video.videoHeight;
-                frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
-                cap = new cv.VideoCapture(video);
+            src.addEventListener('loadeddata', () => {    //evento que activa automaticamente al activarse la camara
+                let width = src.videoWidth;
+                let height = src.videoHeight;
+                
                 streaming = true;
+                console.log("entro")
             
                 detectarYdibujarPatron();    //Llamo a la función
             });
@@ -129,15 +129,12 @@
 
                 let begin = Date.now();
 
-
-                cap.read(frame);
-                cv.cvtColor(frame, frame, cv.COLOR_RGBA2GRAY);
+                frame = new cv.Mat(src.height, src.width, cv.CV_8UC4);
+                cv.cvtColor(frame, frame,  cv.COLOR_RGBA2RGB, 0);
 
                 let dictionary = new cv.Dictionary(cv.DICT_6X6_250);
                 let markerIds = new cv.Mat();
                 let markerCorners = new cv.MatVector();
-                let rvecs = new cv.Mat();
-                let tvecs = new cv.Mat();
 
 
                 // Detectar marcadores
@@ -150,13 +147,11 @@
 
                 }
 
-                cv.imshow('videoInput', frame);
+                cv.imshow('videoOutput', frame);
 
                 // Liberar memoria
                 markerCorners.delete();
                 markerIds.delete();
-                rvecs.delete();
-                tvecs.delete();
 
                 // schedule the next detection
                 let delay = 1000 / FPS - (Date.now() - begin);
@@ -169,8 +164,8 @@
 
         //Evento donde al cerrar la ventana detiene todo.
         window.onbeforeunload = () => {
-            if (video.srcObject) {
-                video.srcObject.getTracks().forEach(track => track.stop());
+            if (src.srcObject) {
+                src.srcObject.getTracks().forEach(track => track.stop());
             }
         };
 
